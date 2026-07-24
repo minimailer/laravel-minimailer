@@ -22,15 +22,15 @@
         "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
         "pestphp/pest": "^3.5"
     },
-    "repositories": [
-        {
+    "repositories": {
+        "minimailer-php": {
             "type": "path",
             "url": "../minimailer-php",
             "options": {
                 "symlink": true
             }
         }
-    ],
+    },
     "autoload": {
         "psr-4": {
             "MiniMailer\\Laravel\\": "src/"
