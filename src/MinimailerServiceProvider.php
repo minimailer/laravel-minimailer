@@ -10,11 +10,9 @@ use MiniMailer\Client;
 use MiniMailer\Contracts\ClientContract;
 use MiniMailer\Contracts\MiniMailerContract;
 use MiniMailer\MiniMailer;
-use Override;
 
 final class MinimailerServiceProvider extends ServiceProvider
 {
-    #[Override]
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/minimailer.php', 'minimailer');
@@ -30,19 +28,16 @@ final class MinimailerServiceProvider extends ServiceProvider
         );
     }
 
-    #[Override]
     public function boot(): void
     {
         $this->publishes([
             __DIR__.'/../config/minimailer.php' => $this->app->configPath('minimailer.php'),
         ], 'minimailer-config');
 
-        Mail::extend('minimailer', function (array $config): MinimailerTransport {
-            return new MinimailerTransport(
-                $this->app->make(MiniMailerContract::class),
-                (string) ($config['domain_id'] ?? config('minimailer.domain_id')),
-                $this->app->make('log'),
-            );
-        });
+        Mail::extend('minimailer', fn (array $config): MinimailerTransport => new MinimailerTransport(
+            $this->app->make(MiniMailerContract::class),
+            (string) ($config['domain_id'] ?? config('minimailer.domain_id')),
+            $this->app->make('log'),
+        ));
     }
 }

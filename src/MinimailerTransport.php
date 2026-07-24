@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace MiniMailer\Laravel;
 
 use MiniMailer\Contracts\MiniMailerContract;
-use Override;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\Envelope;
 use Symfony\Component\Mailer\Exception\TransportException;
@@ -25,6 +24,14 @@ final class MinimailerTransport extends AbstractTransport
 {
     private const HTTP_CREATED = 201;
 
+    /**
+     * Headers MiniMailer derives from the JSON:API attributes; they must not be
+     * duplicated into the free-form headers bag.
+     *
+     * @var list<string>
+     */
+    private const STANDARD_HEADERS = ['from', 'to', 'cc', 'bcc', 'reply-to', 'sender', 'subject', 'content-type'];
+
     public function __construct(
         private readonly MiniMailerContract $minimailer,
         private readonly string $domainId,
@@ -33,13 +40,11 @@ final class MinimailerTransport extends AbstractTransport
         parent::__construct();
     }
 
-    #[Override]
     public function __toString(): string
     {
         return 'minimailer';
     }
 
-    #[Override]
     protected function doSend(SentMessage $message): void
     {
         $email = MessageConverter::toEmail($message->getOriginalMessage());
@@ -52,7 +57,7 @@ final class MinimailerTransport extends AbstractTransport
                     'type' => 'outbound-emails',
                     'attributes' => array_filter([
                         'from' => ($email->getFrom()[0] ?? $email->getSender() ?? $envelope->getSender())?->toString(),
-                        'to' => (string) $this->getRecipient($email, $envelope)?->toString(),
+                        'to' => $this->getRecipient($email, $envelope)?->toString(),
                         'cc' => $this->stringifyAddresses($email->getCc()),
                         'bcc' => $this->stringifyAddresses($email->getBcc()),
                         'reply_to' => $this->stringifyAddresses($email->getReplyTo()),
@@ -80,6 +85,7 @@ final class MinimailerTransport extends AbstractTransport
             }
         } catch (Throwable $throwable) {
             $errorMessage = sprintf('Request to MiniMailer API failed: %s', $throwable->getMessage());
+            $errorCode = is_int($throwable->getCode()) ? $throwable->getCode() : 0;
 
             // Never log the full payload: it carries recipient emails, CC/BCC,
             // reply-to, subject, message body and base64-encoded attachments.
@@ -92,12 +98,12 @@ final class MinimailerTransport extends AbstractTransport
                 'attachment_count' => count($email->getAttachments()),
                 'subject_length' => mb_strlen((string) $email->getSubject()),
                 'http_status' => isset($response) ? $response->status() : null,
-                'error_code' => is_int($throwable->getCode()) ? $throwable->getCode() : 0,
+                'error_code' => $errorCode,
             ]);
 
             throw new TransportException(
                 message: $errorMessage,
-                code: is_int($throwable->getCode()) ? $throwable->getCode() : 0,
+                code: $errorCode,
                 previous: $throwable,
             );
         }
@@ -129,10 +135,8 @@ final class MinimailerTransport extends AbstractTransport
     {
         $headers = [];
 
-        $headersToBypass = ['from', 'to', 'cc', 'bcc', 'reply-to', 'sender', 'subject', 'content-type'];
-
         foreach ($email->getHeaders()->all() as $name => $header) {
-            if (in_array($name, $headersToBypass, true)) {
+            if (in_array($name, self::STANDARD_HEADERS, true)) {
                 continue;
             }
 
