@@ -1,0 +1,65 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  tests:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        php: ['8.2', '8.3', '8.4', '8.5']
+        dependency-version: [prefer-lowest, prefer-stable]
+
+    name: PHP ${{ matrix.php }} - ${{ matrix.os }} - ${{ matrix.dependency-version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The minimailer/minimailer-php SDK is a PRIVATE dependency consumed via a
+      # local path repository. While it stays private, CI checks it out into the
+      # workspace and repoints the named path repo at it. Requires an org PAT
+      # with read access to minimailer/minimailer-php, stored as the
+      # MINIMAILER_SDK_TOKEN secret. (Remove once both packages are public + on
+      # Packagist, then delete the two SDK-checkout/config steps below.)
+      - name: Checkout MiniMailer PHP SDK
+        uses: actions/checkout@v4
+        with:
+          repository: minimailer/minimailer-php
+          ref: main
+          path: minimailer-php
+          token: ${{ secrets.MINIMAILER_SDK_TOKEN }}
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: json, mbstring, curl
+          coverage: none
+          tools: composer:v2
+
+      - name: Point the path repository at the checked-out SDK
+        run: composer config repositories.minimailer-php '{"type":"path","url":"minimailer-php","options":{"symlink":false}}'
+
+      - name: Install dependencies
+        run: composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-progress
+
+      - name: Run tests
+        run: php vendor/bin/pest
