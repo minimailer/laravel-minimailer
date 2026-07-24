@@ -1,0 +1,63 @@
+{
+    "name": "minimailer/laravel-minimailer",
+    "description": "Laravel mail transport for MiniMailer — send with MAIL_MAILER=minimailer.",
+    "keywords": ["minimailer", "laravel", "mail", "transport", "email", "mailer"],
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "maudev",
+            "email": "hello@minimailer.app"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/mail": "^11.0 || ^12.0 || ^13.0",
+        "illuminate/support": "^11.0 || ^12.0 || ^13.0",
+        "minimailer/minimailer-php": "@dev",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.18",
+        "orchestra/testbench": "^9.0 || ^10.0 || ^11.0",
+        "pestphp/pest": "^3.5"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../minimailer-php",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "MiniMailer\\Laravel\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MiniMailer\\Laravel\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "MiniMailer\\Laravel\\MinimailerServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "sort-packages": true
+    },
+    "scripts": {
+        "lint": "pint --test",
+        "test": "pest"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
