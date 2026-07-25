@@ -1,0 +1,39 @@
+name: quality
+
+# CI check ONLY — fails if there are style violations, never mutates the codebase.
+# Developers fix style locally (`vendor/bin/pint`) and push; CI just verifies. No
+# workflow commits back to a branch.
+#
+# The Pint action bundles its own PHP + Pint, so this job needs no `composer
+# install` — which keeps it free of the private minimailer/minimailer-php SDK
+# checkout and its MINIMAILER_SDK_TOKEN secret that `tests.yml` requires.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php-code-styling:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    name: Pint
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Check code style (fail on violations, no changes)
+        uses: aglipanci/laravel-pint-action@36de00d5f5a8a4e12d443e01671daa12a18f4c79 # 2.6
+        with:
+          testMode: true
