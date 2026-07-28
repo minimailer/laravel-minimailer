@@ -1,0 +1,57 @@
+name: dependabot-auto-merge
+on: pull_request_target
+
+# pull_request_target runs with write permissions, but this workflow never
+# checks out or executes PR code — it only reads metadata, waits on the PR's
+# own check runs, and enables auto-merge.
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      # tests.yml is a 24-job matrix, so match by regexp instead of a single
+      # check name. All matrix job names start with "PHP ".
+      - name: Wait for the tests matrix to succeed
+        uses: lewagon/wait-on-check-action@2271c86c146b96545b4e871b855e10ffa6f50773 # v1.9.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          check-regexp: 'PHP .*'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 20
+          allowed-conclusions: success
+
+      - name: Wait for Pint to succeed
+        uses: lewagon/wait-on-check-action@2271c86c146b96545b4e871b855e10ffa6f50773 # v1.9.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          check-name: Pint
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 20
+          allowed-conclusions: success
+
+      - name: Auto-merge Dependabot PRs for semver-minor updates
+        if: ${{steps.metadata.outputs.update-type == 'version-update:semver-minor'}}
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Auto-merge Dependabot PRs for semver-patch updates
+        if: ${{steps.metadata.outputs.update-type == 'version-update:semver-patch'}}
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
