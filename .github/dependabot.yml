@@ -1,0 +1,27 @@
+# Please see the documentation for all configuration options:
+# https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+#
+# NOTE: Dependabot-triggered pull_request runs draw secrets from the separate
+# Dependabot secrets store, so MINIMAILER_SDK_TOKEN must ALSO be registered
+# there (`gh secret set MINIMAILER_SDK_TOKEN --app dependabot`) or every
+# Dependabot PR fails the private SDK checkout in tests.yml.
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+
+  # composer.lock is gitignored (library convention), so Dependabot only opens
+  # a PR when a release falls outside the composer.json constraints — low
+  # noise, useful signal for new majors.
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "php"
+      - "dependencies"
