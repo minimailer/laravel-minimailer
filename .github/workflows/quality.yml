@@ -6,7 +6,7 @@ name: quality
 #
 # The Pint action bundles its own PHP + Pint, so this job needs no `composer
 # install` — which keeps it free of the private minimailer/minimailer-php SDK
-# checkout and its MINIMAILER_SDK_TOKEN secret that `tests.yml` requires.
+# checkout and its MINIMAILER_SDK_SSH_KEY secret that `tests.yml` requires.
 
 on:
   push:
