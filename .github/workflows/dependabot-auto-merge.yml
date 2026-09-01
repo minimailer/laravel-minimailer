@@ -25,7 +25,7 @@ jobs:
       # tests.yml is a 24-job matrix, so match by regexp instead of a single
       # check name. All matrix job names start with "PHP ".
       - name: Wait for the tests matrix to succeed
-        uses: lewagon/wait-on-check-action@2271c86c146b96545b4e871b855e10ffa6f50773 # v1.9.0
+        uses: lewagon/wait-on-check-action@369769072fe522a3a8a85c03c96af1e5242a1994 # v1.9.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           check-regexp: 'PHP .*'
@@ -34,7 +34,7 @@ jobs:
           allowed-conclusions: success
 
       - name: Wait for Pint to succeed
-        uses: lewagon/wait-on-check-action@2271c86c146b96545b4e871b855e10ffa6f50773 # v1.9.0
+        uses: lewagon/wait-on-check-action@369769072fe522a3a8a85c03c96af1e5242a1994 # v1.9.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           check-name: Pint
