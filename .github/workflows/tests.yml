@@ -38,19 +38,20 @@ jobs:
 
       # The minimailer/minimailer-php SDK is a PRIVATE dependency consumed via a
       # local path repository. While it stays private, CI checks it out into the
-      # workspace and repoints the named path repo at it. Requires an org PAT
-      # with read access to minimailer/minimailer-php, stored as the
-      # MINIMAILER_SDK_TOKEN secret. (Remove once both packages are public + on
-      # Packagist, then delete the two SDK-checkout/config steps below.)
+      # workspace and repoints the named path repo at it. Auth is a read-only
+      # deploy key registered on minimailer/minimailer-php, whose private half
+      # is stored as the MINIMAILER_SDK_SSH_KEY secret — no expiry, unlike the
+      # PAT it replaced. (Remove once both packages are public + on Packagist,
+      # then delete the two SDK-checkout/config steps below.)
       - name: Checkout MiniMailer PHP SDK
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: minimailer/minimailer-php
           ref: main
           path: minimailer-php
-          token: ${{ secrets.MINIMAILER_SDK_TOKEN }}
-          # The token is still used for the fetch itself; this only keeps it
-          # out of the checked-out .git/config afterwards.
+          ssh-key: ${{ secrets.MINIMAILER_SDK_SSH_KEY }}
+          # The key is still used for the fetch itself; this only keeps it
+          # out of the checked-out .git config afterwards.
           persist-credentials: false
 
       - name: Setup PHP
