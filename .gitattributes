@@ -1,0 +1,14 @@
+# Keep the distributed package to runtime code only. Composer builds its dist
+# archive from the git tree, so anything marked export-ignore here is excluded
+# from what consumers download. (PHP analogue of an .npmignore.)
+/.github            export-ignore
+/.idea              export-ignore
+/tests              export-ignore
+/.gitattributes     export-ignore
+/.gitignore         export-ignore
+/CLAUDE.md          export-ignore
+/phpunit.xml        export-ignore
+/pint.json          export-ignore
+
+# Normalise line endings so the Windows CI cells see the same bytes as Linux.
+* text=auto eol=lf
