@@ -1,7 +1,14 @@
 {
     "name": "minimailer/laravel-minimailer",
     "description": "Laravel mail transport for MiniMailer — send with MAIL_MAILER=minimailer.",
-    "keywords": ["minimailer", "laravel", "mail", "transport", "email", "mailer"],
+    "keywords": [
+        "minimailer",
+        "laravel",
+        "mail",
+        "transport",
+        "email",
+        "mailer"
+    ],
     "license": "MIT",
     "type": "library",
     "authors": [
@@ -52,7 +59,19 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true
         },
-        "sort-packages": true
+        "sort-packages": true,
+        "policy": {
+            "malware": {
+                "block": true,
+                "block-scope": "all"
+            },
+            "advisories": {
+                "block": true
+            },
+            "abandoned": {
+                "audit": "report"
+            }
+        }
     },
     "scripts": {
         "lint": "pint --test",
