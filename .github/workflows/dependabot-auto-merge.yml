@@ -42,6 +42,17 @@ jobs:
           wait-interval: 20
           allowed-conclusions: success
 
+      # Composer updates must also clear the malware/advisory audit before they
+      # are allowed to merge on their own.
+      - name: Wait for the Composer security audit to succeed
+        uses: lewagon/wait-on-check-action@369769072fe522a3a8a85c03c96af1e5242a1994 # v1.9.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          check-name: Malware & advisory audit
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 20
+          allowed-conclusions: success
+
       - name: Auto-merge Dependabot PRs for semver-minor updates
         if: ${{steps.metadata.outputs.update-type == 'version-update:semver-minor'}}
         run: gh pr merge --auto --squash "$PR_URL"
