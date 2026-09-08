@@ -1,8 +1,13 @@
 # Laravel MiniMailer
 
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/minimailer/laravel-minimailer.svg?style=flat-square)](https://packagist.org/packages/minimailer/laravel-minimailer)
+[![Total Downloads](https://img.shields.io/packagist/dt/minimailer/laravel-minimailer.svg?style=flat-square)](https://packagist.org/packages/minimailer/laravel-minimailer)
+[![License](https://img.shields.io/packagist/l/minimailer/laravel-minimailer.svg?style=flat-square&color=yellow)](https://github.com/minimailer/laravel-minimailer/blob/main/LICENSE)
+[![Tests](https://img.shields.io/github/actions/workflow/status/minimailer/laravel-minimailer/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/minimailer/laravel-minimailer/actions/workflows/tests.yml)
+
 A first-class Laravel mail transport for [MiniMailer](https://minimailer.app). Send with `MAIL_MAILER=minimailer` — no controller code, just Laravel's `Mail` facade and Mailables. Built on the [`minimailer/minimailer-php`](https://github.com/minimailer/minimailer-php) SDK.
 
-> Private / pre-release. Pinned to the MiniMailer **v1** API contract.
+> Pre-release (`0.x`). A thin bridge over the SDK, so it inherits the SDK's pin to the MiniMailer **v1** API contract. The public surface is not covered by SemVer guarantees until `1.0.0`; every change is listed in the [changelog](CHANGELOG.md).
 
 ## Requirements
 
@@ -43,7 +48,7 @@ MINIMAILER_API_KEY=your-api-key
 MINIMAILER_TRANSACTIONAL_DOMAIN_ID=dom_...
 ```
 
-The API key must carry the `emails:send` scope.
+The API key must carry the `emails:send` scope. `MINIMAILER_BASE_URL` overrides the API base URL (default `https://api.minimailer.app/`) and only matters for staging or self-hosted environments.
 
 ## Usage
 
@@ -57,6 +62,20 @@ Mail::to('customer@example.com')->send(new OrderShipped($order));
 
 The transport supports HTML and plain-text bodies, CC/BCC, reply-to, custom headers, and attachments (including inline `cid:` images). The MiniMailer message id is stamped onto the sent message as the `X-Minimailer-Message-Id` header.
 
+### HTTP behaviour
+
+The transport uses the SDK's default HTTP client, so a send gives up after 10 s connecting and 30 s per request, never follows redirects, and identifies itself with a `minimailer-php/<version>` User-Agent. When a send fails, the transport logs only redacted metadata (recipient and attachment counts, subject length, HTTP status) — never addresses, subject, body, or the API key.
+
+## API reference
+
+The v1 contract is published as an OpenAPI document: <https://api.minimailer.app/openapi.yaml>. For anything beyond sending — domains, webhooks, audiences, campaigns, inbound mail, GDPR erasure — use the [SDK](https://github.com/minimailer/minimailer-php) directly.
+
+## Contributing and security
+
+- [Contributing guide](.github/CONTRIBUTING.md) — setup, tests, and the no-network rule for the test suite.
+- [Security policy](.github/SECURITY.md) — report vulnerabilities privately, never in a public issue.
+- [Changelog](CHANGELOG.md)
+
 ## License
 
-MIT.
+[MIT](LICENSE).
