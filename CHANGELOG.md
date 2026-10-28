@@ -10,6 +10,9 @@ SemVer guarantees until `1.0.0` is tagged.
 
 ### Added
 
+- Sender display name: the transport sends the `From` address's name as the API's `from_name`
+  attribute and the bare address as `from`, so `Mail::from('hello@acme.com', 'Acme')` shows
+  "Acme" in the recipient's client. Requires MiniMailer v1 with `from_name` support.
 - `VerifyMinimailerWebhook` middleware: Standard Webhooks `v1` HMAC-SHA256 verification of
   incoming MiniMailer webhooks (timestamp tolerance, constant-time comparison, comma-separated
   secrets for rotation), configured by `minimailer.webhook_secret` and `webhook_tolerance`.
