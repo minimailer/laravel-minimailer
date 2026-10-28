@@ -9,6 +9,7 @@ use Illuminate\Support\ServiceProvider;
 use MiniMailer\Client;
 use MiniMailer\Contracts\ClientContract;
 use MiniMailer\Contracts\MiniMailerContract;
+use MiniMailer\Laravel\Http\Middleware\VerifyMinimailerWebhook;
 use MiniMailer\MiniMailer;
 
 final class MinimailerServiceProvider extends ServiceProvider
@@ -26,6 +27,11 @@ final class MinimailerServiceProvider extends ServiceProvider
             MiniMailerContract::class,
             fn (): MiniMailerContract => new MiniMailer($this->app->make(ClientContract::class)),
         );
+
+        $this->app->bind(VerifyMinimailerWebhook::class, fn (): VerifyMinimailerWebhook => new VerifyMinimailerWebhook(
+            VerifyMinimailerWebhook::secretsFromConfig(config('minimailer.webhook_secret')),
+            (int) config('minimailer.webhook_tolerance', VerifyMinimailerWebhook::DEFAULT_TOLERANCE_SECONDS),
+        ));
     }
 
     public function boot(): void

@@ -42,13 +42,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Webhook public keys
+    | Webhook secret
     |--------------------------------------------------------------------------
     |
-    | Public key(s) used to verify inbound webhook signatures from MiniMailer.
+    | The `whsec_...` secret MiniMailer showed once when the webhook endpoint
+    | was created. It verifies the Standard Webhooks `v1` HMAC signature on
+    | incoming webhook requests (see the VerifyMinimailerWebhook middleware).
+    | During a secret rotation list both secrets, comma-separated, until the
+    | 24-hour dual-signing window has passed.
     |
     */
 
-    'webhook_public_keys' => env('MINIMAILER_WEBHOOK_PUBLIC_KEYS'),
+    'webhook_secret' => env('MINIMAILER_WEBHOOK_SECRET'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Webhook timestamp tolerance
+    |--------------------------------------------------------------------------
+    |
+    | How far (in seconds) a webhook's `webhook-timestamp` may differ from the
+    | server clock before the request is rejected as a replay.
+    |
+    */
+
+    'webhook_tolerance' => (int) env('MINIMAILER_WEBHOOK_TOLERANCE', 300),
 
 ];

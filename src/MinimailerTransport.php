@@ -12,6 +12,7 @@ use Symfony\Component\Mailer\SentMessage;
 use Symfony\Component\Mailer\Transport\AbstractTransport;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\Mime\Header\UnstructuredHeader;
 use Symfony\Component\Mime\MessageConverter;
 use Throwable;
 
@@ -31,6 +32,24 @@ final class MinimailerTransport extends AbstractTransport
      * @var list<string>
      */
     private const STANDARD_HEADERS = ['from', 'to', 'cc', 'bcc', 'reply-to', 'sender', 'subject', 'content-type'];
+
+    /**
+     * Headers Symfony Mailer generates fresh for every send attempt. Forwarding
+     * them would make a retried message's payload differ from the first attempt,
+     * which turns an idempotent retry into a 409. The API sets its own anyway.
+     *
+     * @var list<string>
+     */
+    private const PER_ATTEMPT_HEADERS = ['message-id', 'date', 'mime-version'];
+
+    /**
+     * Opt-in idempotency: a mailable that sets this header has its value sent
+     * as the API's `idempotency_key`, so a queue retry after a lost response
+     * cannot deliver the same message twice. The header itself is never
+     * forwarded. Keep the key stable across retries and unique per message
+     * (an order id, a notification id), never a timestamp or a random value.
+     */
+    public const IDEMPOTENCY_KEY_HEADER = 'X-Minimailer-Idempotency-Key';
 
     public function __construct(
         private readonly MiniMailerContract $minimailer,
@@ -66,6 +85,7 @@ final class MinimailerTransport extends AbstractTransport
                         'html' => $email->getHtmlBody(),
                         'text' => $email->getTextBody(),
                         'attachments' => $this->getAttachments($email),
+                        'idempotency_key' => $this->getIdempotencyKey($email),
                     ]),
                     'relationships' => [
                         'domain' => [
@@ -136,7 +156,7 @@ final class MinimailerTransport extends AbstractTransport
         $headers = [];
 
         foreach ($email->getHeaders()->all() as $name => $header) {
-            if (in_array($name, self::STANDARD_HEADERS, true)) {
+            if (in_array($name, self::STANDARD_HEADERS, true) || in_array($name, self::PER_ATTEMPT_HEADERS, true) || $name === strtolower(self::IDEMPOTENCY_KEY_HEADER)) {
                 continue;
             }
 
@@ -144,6 +164,17 @@ final class MinimailerTransport extends AbstractTransport
         }
 
         return $headers;
+    }
+
+    private function getIdempotencyKey(Email $email): ?string
+    {
+        $header = $email->getHeaders()->get(self::IDEMPOTENCY_KEY_HEADER);
+
+        // getValue() is the raw text; getBodyAsString() would MIME-encode a
+        // non-ASCII key into encoded words the API would not recognise.
+        $key = $header instanceof UnstructuredHeader ? $header->getValue() : $header?->getBodyAsString();
+
+        return is_string($key) && trim($key) !== '' ? trim($key) : null;
     }
 
     /**

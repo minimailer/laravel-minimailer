@@ -94,6 +94,43 @@ it('base64-encodes attachments and carries content_id for inline parts', functio
         ->and($regular)->not->toHaveKey('content_id');
 });
 
+it('forwards an opt-in idempotency key as an attribute and never as a header', function (): void {
+    $history = [];
+    $transport = transportReplaying([
+        new GuzzleResponse(201, [], '{"data":{"id":"email_01ABC"}}'),
+        new GuzzleResponse(201, [], '{"data":{"id":"email_01ABD"}}'),
+    ], $history);
+
+    $keyed = (new Email)
+        ->from('sender@example.com')
+        ->to('recipient@example.com')
+        ->subject('Order confirmed')
+        ->html('<p>Thanks</p>');
+    $keyed->getHeaders()->addTextHeader(MinimailerTransport::IDEMPOTENCY_KEY_HEADER, ' order-confirmed:01JZX:'.str_repeat('é', 40).' ');
+    $keyed->getHeaders()->addTextHeader('X-Campaign', 'spring');
+    $keyed->getHeaders()->addDateHeader('Date', new DateTimeImmutable('2026-10-28 10:00:00'));
+    $keyed->getHeaders()->addIdHeader('Message-ID', 'first-attempt@example.com');
+
+    $plain = (new Email)
+        ->from('sender@example.com')
+        ->to('recipient@example.com')
+        ->subject('No key')
+        ->html('<p>Hi</p>');
+
+    $transport->send($keyed);
+    $transport->send($plain);
+
+    $keyedAttributes = json_decode((string) $history[0]['request']->getBody(), true)['data']['attributes'];
+    $plainAttributes = json_decode((string) $history[1]['request']->getBody(), true)['data']['attributes'];
+
+    // The raw Unicode key, not a MIME-encoded word; per-attempt headers (Message-ID, Date,
+    // MIME-Version) are not forwarded, so a retried payload is byte-identical.
+    expect($keyedAttributes['idempotency_key'])->toBe('order-confirmed:01JZX:'.str_repeat('é', 40))
+        ->and($keyedAttributes['headers'])->toBe(['X-Campaign' => 'spring'])
+        ->and($plainAttributes)->not->toHaveKey('idempotency_key')
+        ->and($plainAttributes['headers'] ?? [])->toBe([]);
+});
+
 it('throws a TransportException when the API does not return 201', function (): void {
     $transport = transportReplaying([
         new GuzzleResponse(200, [], '{"data":{"id":"email_01ABC"}}'),
