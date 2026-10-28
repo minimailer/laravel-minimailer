@@ -10,8 +10,20 @@ SemVer guarantees until `1.0.0` is tagged.
 
 ### Added
 
+- `VerifyMinimailerWebhook` middleware: Standard Webhooks `v1` HMAC-SHA256 verification of
+  incoming MiniMailer webhooks (timestamp tolerance, constant-time comparison, comma-separated
+  secrets for rotation), configured by `minimailer.webhook_secret` and `webhook_tolerance`.
+- Opt-in idempotent sends: a `X-Minimailer-Idempotency-Key` header on the message is sent as the
+  API's `idempotency_key` attribute (and stripped from the forwarded headers), so a queue retry
+  after a lost response cannot deliver twice.
 - `minimailer` Symfony Mailer transport — send with `MAIL_MAILER=minimailer`.
 - `MinimailerServiceProvider` wiring the transport into Laravel's mail manager, with a
-  publishable `config/minimailer.php` (`key`, `base_url`, `domain_id`, `webhook_public_keys`).
+  publishable `config/minimailer.php` (`key`, `base_url`, `domain_id`, `webhook_secret`,
+  `webhook_tolerance`).
+
+### Changed
+
+- `config/minimailer.php`: `webhook_public_keys` replaced by `webhook_secret` — the v1 API signs
+  webhooks with a shared `whsec_` secret (Standard Webhooks `v1`), not an Ed25519 public key.
 - `X-Minimailer-Message-Id` header on the sent message, carrying the API's email id.
 - Laravel 11, 12 and 13 support on PHP 8.2+.

@@ -66,6 +66,39 @@ The transport supports HTML and plain-text bodies, CC/BCC, reply-to, custom head
 
 The transport uses the SDK's default HTTP client, so a send gives up after 10 s connecting and 30 s per request, never follows redirects, and identifies itself with a `minimailer-php/<version>` User-Agent. When a send fails, the transport logs only redacted metadata (recipient and attachment counts, subject length, HTTP status) — never addresses, subject, body, or the API key.
 
+### Idempotent sends
+
+A queued mailable can be retried after the API accepted the message but the response was lost. To make such a retry a no-op instead of a second delivery, set a stable, unique key on the message and the transport sends it as the API's `idempotency_key`:
+
+```php
+use MiniMailer\Laravel\MinimailerTransport;
+
+public function headers(): Headers
+{
+    return new Headers(text: [MinimailerTransport::IDEMPOTENCY_KEY_HEADER => 'order-confirmed:'.$this->order->id]);
+}
+```
+
+The header itself is never forwarded. Use an id of the thing being announced (an order, a notification), never a timestamp or a random value.
+
+## Webhooks
+
+MiniMailer signs every webhook delivery following the [Standard Webhooks](https://standardwebhooks.com) specification. Put the `VerifyMinimailerWebhook` middleware on your endpoint and set the secret the dashboard showed when the webhook was created:
+
+```php
+use MiniMailer\Laravel\Http\Middleware\VerifyMinimailerWebhook;
+
+Route::post('minimailer/webhook', MinimailerWebhookController::class)
+    ->middleware(VerifyMinimailerWebhook::class)
+    ->withoutMiddleware(VerifyCsrfToken::class);
+```
+
+```dotenv
+MINIMAILER_WEBHOOK_SECRET=whsec_...
+```
+
+The middleware checks the `webhook-id`, `webhook-timestamp` and `webhook-signature` headers, rejects timestamps outside a 5-minute window (`MINIMAILER_WEBHOOK_TOLERANCE`), and compares the `v1` HMAC-SHA256 signature in constant time. A request that fails gets a `400` (missing or malformed headers, stale timestamp) or a `401` (no matching signature). During a secret rotation list both secrets, comma-separated, for the 24 hours MiniMailer signs with both. Your controller then reads the envelope — `type`, `timestamp`, `data` — from the JSON body; keep it idempotent on `webhook-id`, because deliveries are retried.
+
 ## API reference
 
 The v1 contract is published as an OpenAPI document: <https://api.minimailer.app/openapi.yaml>. For anything beyond sending — domains, webhooks, audiences, campaigns, inbound mail, GDPR erasure — use the [SDK](https://github.com/minimailer/minimailer-php) directly.
