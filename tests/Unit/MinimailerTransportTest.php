@@ -11,6 +11,7 @@ use MiniMailer\Client;
 use MiniMailer\Laravel\MinimailerTransport;
 use MiniMailer\MiniMailer;
 use Symfony\Component\Mailer\Exception\TransportException;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Part\DataPart;
 
@@ -39,7 +40,7 @@ it('sends through the v1 outbound-emails contract and stamps the message id', fu
     ], $history);
 
     $email = (new Email)
-        ->from('sender@example.com')
+        ->from(new Address('sender@example.com', 'Acme Studio'))
         ->to('recipient@example.com')
         ->replyTo('reply@example.com')
         ->subject('Welcome')
@@ -57,6 +58,7 @@ it('sends through the v1 outbound-emails contract and stamps the message id', fu
         ->and($request->getMethod())->toBe('POST')
         ->and($payload['data']['type'])->toBe('outbound-emails')
         ->and($payload['data']['attributes']['from'])->toBe('sender@example.com')
+        ->and($payload['data']['attributes']['from_name'])->toBe('Acme Studio')
         ->and($payload['data']['attributes']['to'])->toBe('recipient@example.com')
         ->and($payload['data']['attributes']['reply_to'])->toBe(['reply@example.com'])
         ->and($payload['data']['attributes']['subject'])->toBe('Welcome')
@@ -112,7 +114,7 @@ it('forwards an opt-in idempotency key as an attribute and never as a header', f
     $keyed->getHeaders()->addIdHeader('Message-ID', 'first-attempt@example.com');
 
     $plain = (new Email)
-        ->from('sender@example.com')
+        ->from(new Address('sender@example.com', '0'))
         ->to('recipient@example.com')
         ->subject('No key')
         ->html('<p>Hi</p>');
@@ -128,6 +130,8 @@ it('forwards an opt-in idempotency key as an attribute and never as a header', f
     expect($keyedAttributes['idempotency_key'])->toBe('order-confirmed:01JZX:'.str_repeat('é', 40))
         ->and($keyedAttributes['headers'])->toBe(['X-Campaign' => 'spring'])
         ->and($plainAttributes)->not->toHaveKey('idempotency_key')
+        // "0" is a valid display name: a loose falsy check would have dropped it.
+        ->and($plainAttributes['from_name'])->toBe('0')
         ->and($plainAttributes['headers'] ?? [])->toBe([]);
 });
 

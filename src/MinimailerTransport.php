@@ -75,7 +75,10 @@ final class MinimailerTransport extends AbstractTransport
                 'data' => [
                     'type' => 'outbound-emails',
                     'attributes' => array_filter([
-                        'from' => ($email->getFrom()[0] ?? $email->getSender() ?? $envelope->getSender())?->toString(),
+                        // The address and its display name travel separately: the API validates
+                        // `from` as a bare email and builds the RFC 5322 From header from `from_name`.
+                        'from' => ($email->getFrom()[0] ?? $email->getSender() ?? $envelope->getSender())?->getAddress(),
+                        'from_name' => $this->getFromName($email, $envelope),
                         'to' => $this->getRecipient($email, $envelope)?->toString(),
                         'cc' => $this->stringifyAddresses($email->getCc()),
                         'bcc' => $this->stringifyAddresses($email->getBcc()),
@@ -86,7 +89,9 @@ final class MinimailerTransport extends AbstractTransport
                         'text' => $email->getTextBody(),
                         'attachments' => $this->getAttachments($email),
                         'idempotency_key' => $this->getIdempotencyKey($email),
-                    ]),
+                        // Drop only absent values: a plain array_filter would also drop the
+                        // display name "0" and the subject "0".
+                    ], static fn (mixed $value): bool => $value !== null && $value !== '' && $value !== []),
                     'relationships' => [
                         'domain' => [
                             'type' => 'domains',
@@ -164,6 +169,17 @@ final class MinimailerTransport extends AbstractTransport
         }
 
         return $headers;
+    }
+
+    /**
+     * The sender's display name, or null when the address carries none. A strict empty-string
+     * check: a name like "0" is a valid display name and must not be dropped.
+     */
+    private function getFromName(Email $email, Envelope $envelope): ?string
+    {
+        $name = ($email->getFrom()[0] ?? $email->getSender() ?? $envelope->getSender())?->getName();
+
+        return is_string($name) && $name !== '' ? $name : null;
     }
 
     private function getIdempotencyKey(Email $email): ?string
