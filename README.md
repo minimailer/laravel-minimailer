@@ -1,8 +1,7 @@
 # Laravel MiniMailer
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/minimailer/laravel-minimailer.svg?style=flat-square)](https://packagist.org/packages/minimailer/laravel-minimailer)
-[![Total Downloads](https://img.shields.io/packagist/dt/minimailer/laravel-minimailer.svg?style=flat-square)](https://packagist.org/packages/minimailer/laravel-minimailer)
-[![License](https://img.shields.io/packagist/l/minimailer/laravel-minimailer.svg?style=flat-square&color=yellow)](https://github.com/minimailer/laravel-minimailer/blob/main/LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/minimailer/laravel-minimailer?style=flat-square)](https://github.com/minimailer/laravel-minimailer/releases)
+[![License](https://img.shields.io/github/license/minimailer/laravel-minimailer?style=flat-square&color=yellow)](https://github.com/minimailer/laravel-minimailer/blob/main/LICENSE)
 [![Tests](https://img.shields.io/github/actions/workflow/status/minimailer/laravel-minimailer/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/minimailer/laravel-minimailer/actions/workflows/tests.yml)
 
 A first-class Laravel mail transport for [MiniMailer](https://minimailer.app). Send with `MAIL_MAILER=minimailer` — no controller code, just Laravel's `Mail` facade and Mailables. Built on the [`minimailer/minimailer-php`](https://github.com/minimailer/minimailer-php) SDK.
@@ -16,8 +15,13 @@ A first-class Laravel mail transport for [MiniMailer](https://minimailer.app). S
 
 ## Installation
 
+The packages are not on Packagist yet. Add both repositories (the transport depends on the
+SDK), then require the transport:
+
 ```bash
-composer require minimailer/laravel-minimailer
+composer config repositories.minimailer-php vcs https://github.com/minimailer/minimailer-php
+composer config repositories.laravel-minimailer vcs https://github.com/minimailer/laravel-minimailer
+composer require minimailer/laravel-minimailer:^0.2
 ```
 
 The service provider is auto-discovered. Optionally publish the config:

@@ -17,9 +17,10 @@ use Symfony\Component\Mime\MessageConverter;
 use Throwable;
 
 /**
- * Symfony Mailer transport that sends through the MiniMailer v1 API, built
- * directly on the SDK and targeting the v1 `outbound-emails`
- * contract; decoupled from framework helpers so it is container-free testable.
+ * Symfony Mailer transport that sends through the MiniMailer v1 API (the
+ * `outbound-emails` collection). It takes no framework helpers: the SDK client,
+ * the sending domain and an optional logger arrive through the constructor, so
+ * the class is testable on its own and the service provider does the wiring.
  */
 final class MinimailerTransport extends AbstractTransport
 {
