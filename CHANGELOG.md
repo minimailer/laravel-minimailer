@@ -6,6 +6,14 @@ All notable changes to `minimailer/laravel-minimailer` will be documented in thi
 
 Nothing yet.
 
+## 0.2.2 - 2026-10-28
+
+### Fixed
+
+- The `domain` relationship on the outbound-email payload is now a JSON:API linkage
+  (`relationships.domain.data`), which the v1 API requires; every send failed with
+  "The data.relationships.domain.data field is required." before.
+
 ## 0.2.1 - 2026-10-28
 
 ### Added

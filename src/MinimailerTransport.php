@@ -94,9 +94,9 @@ final class MinimailerTransport extends AbstractTransport
                         // display name "0" and the subject "0".
                     ], static fn (mixed $value): bool => $value !== null && $value !== '' && $value !== []),
                     'relationships' => [
+                        // JSON:API to-one linkage: the API requires the `data` wrapper.
                         'domain' => [
-                            'type' => 'domains',
-                            'id' => $this->domainId,
+                            'data' => ['type' => 'domains', 'id' => $this->domainId],
                         ],
                     ],
                 ],

@@ -63,7 +63,7 @@ it('sends through the v1 outbound-emails contract and stamps the message id', fu
         ->and($payload['data']['attributes']['reply_to'])->toBe(['reply@example.com'])
         ->and($payload['data']['attributes']['subject'])->toBe('Welcome')
         ->and($payload['data']['attributes']['html'])->toBe('<p>Hello there</p>')
-        ->and($payload['data']['relationships']['domain'])->toBe(['type' => 'domains', 'id' => 'dom_123'])
+        ->and($payload['data']['relationships']['domain'])->toBe(['data' => ['type' => 'domains', 'id' => 'dom_123']])
         ->and($sent?->getOriginalMessage()->getHeaders()->get('X-Minimailer-Message-Id')?->getBodyAsString())
         ->toBe('email_01JZX8K7Q2M3N4P5R6S7T8V9W2');
 });
