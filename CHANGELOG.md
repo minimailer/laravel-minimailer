@@ -6,7 +6,7 @@ All notable changes to `minimailer/laravel-minimailer` will be documented in thi
 
 Nothing yet.
 
-## 0.2.0 - 2026-10-28
+## 0.2.1 - 2026-10-28
 
 ### Added
 
@@ -14,7 +14,9 @@ Nothing yet.
   attribute and the bare address as `from`, so `Mail::from('hello@acme.com', 'Acme')` shows
   "Acme" in the recipient's client. Requires MiniMailer v1 with `from_name` support.
 
-## 0.1.0 - 2026-10-28
+## 0.1.1 - 2026-10-28
+
+Tagged as 0.1.1 and 0.2.1: the 0.1.0 and 0.2.0 tags were retired when the repository went public.
 
 First tagged pre-release. The package is a thin bridge over `minimailer/minimailer-php` and
 inherits its pin to the MiniMailer **v1** API contract; the public surface is not covered by
