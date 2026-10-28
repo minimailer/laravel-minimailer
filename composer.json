@@ -21,7 +21,7 @@
         "php": "^8.2",
         "illuminate/mail": "^11.0 || ^12.0 || ^13.0",
         "illuminate/support": "^11.0 || ^12.0 || ^13.0",
-        "minimailer/minimailer-php": "@dev",
+        "minimailer/minimailer-php": "^0.1",
         "psr/log": "^3.0"
     },
     "require-dev": {
@@ -34,7 +34,10 @@
             "type": "path",
             "url": "../minimailer-php",
             "options": {
-                "symlink": true
+                "symlink": true,
+                "versions": {
+                    "minimailer/minimailer-php": "0.1.0"
+                }
             }
         }
     },
