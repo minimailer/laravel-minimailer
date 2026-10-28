@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: minimailer/minimailer-php
-          ref: main
+          ref: v0.1.0
           path: minimailer-php
           ssh-key: ${{ secrets.MINIMAILER_SDK_SSH_KEY }}
           persist-credentials: false
@@ -46,7 +46,7 @@ jobs:
           coverage: none
 
       - name: Point the path repository at the checked-out SDK
-        run: composer config repositories.minimailer-php '{"type":"path","url":"minimailer-php","options":{"symlink":false}}'
+        run: composer config repositories.minimailer-php '{"type":"path","url":"minimailer-php","options":{"symlink":false,"versions":{"minimailer/minimailer-php":"0.1.0"}}}'
 
       - name: Resolve dependencies (library ships no lock)
         run: composer update --prefer-dist --no-interaction --no-progress
