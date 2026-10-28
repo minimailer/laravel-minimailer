@@ -2,11 +2,8 @@ name: quality
 
 # CI check ONLY — fails if there are style violations, never mutates the codebase.
 # Developers fix style locally (`vendor/bin/pint`) and push; CI just verifies. No
-# workflow commits back to a branch.
-#
-# The Pint action bundles its own PHP + Pint, so this job needs no `composer
-# install` — which keeps it free of the private minimailer/minimailer-php SDK
-# checkout and its MINIMAILER_SDK_SSH_KEY secret that `tests.yml` requires.
+# workflow commits back to a branch. The Pint action bundles its own PHP and Pint,
+# so this job runs no `composer install`.
 
 on:
   push:

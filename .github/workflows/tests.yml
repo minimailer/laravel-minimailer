@@ -36,24 +36,6 @@ jobs:
         with:
           persist-credentials: false
 
-      # The minimailer/minimailer-php SDK is a PRIVATE dependency consumed via a
-      # local path repository. While it stays private, CI checks it out into the
-      # workspace and repoints the named path repo at it. Auth is a read-only
-      # deploy key registered on minimailer/minimailer-php, whose private half
-      # is stored as the MINIMAILER_SDK_SSH_KEY secret — no expiry, unlike the
-      # PAT it replaced. (Remove once both packages are public + on Packagist,
-      # then delete the two SDK-checkout/config steps below.)
-      - name: Checkout MiniMailer PHP SDK
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: minimailer/minimailer-php
-          ref: v0.1.0
-          path: minimailer-php
-          ssh-key: ${{ secrets.MINIMAILER_SDK_SSH_KEY }}
-          # The key is still used for the fetch itself; this only keeps it
-          # out of the checked-out .git config afterwards.
-          persist-credentials: false
-
       - name: Setup PHP
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
@@ -64,9 +46,6 @@ jobs:
           extensions: json, mbstring, curl, fileinfo
           coverage: none
           tools: composer:v2
-
-      - name: Point the path repository at the checked-out SDK
-        run: composer config repositories.minimailer-php '{"type":"path","url":"minimailer-php","options":{"symlink":false,"versions":{"minimailer/minimailer-php":"0.1.0"}}}'
 
       - name: Install dependencies
         run: composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-progress

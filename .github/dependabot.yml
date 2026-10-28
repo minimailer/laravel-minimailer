@@ -1,10 +1,5 @@
 # Please see the documentation for all configuration options:
 # https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
-#
-# NOTE: Dependabot-triggered pull_request runs draw secrets from the separate
-# Dependabot secrets store, so MINIMAILER_SDK_SSH_KEY must ALSO be registered
-# there (`gh secret set MINIMAILER_SDK_SSH_KEY --app dependabot`) or every
-# Dependabot PR fails the private SDK checkout in tests.yml.
 
 version: 2
 updates:
@@ -15,8 +10,9 @@ updates:
     labels:
       - "dependencies"
 
-  # NO composer ecosystem for now: Dependabot's updater clones only this repo,
-  # so the `../minimailer-php` path repository does not exist in its sandbox and
-  # every resolution fails with dependency_file_not_resolvable (verified on the
-  # first scan). Re-add composer here once both packages are public on Packagist
-  # and the path-repository block is dropped from composer.json.
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"

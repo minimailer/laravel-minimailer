@@ -9,6 +9,7 @@
         "email",
         "mailer"
     ],
+    "homepage": "https://minimailer.app",
     "license": "MIT",
     "type": "library",
     "authors": [
@@ -17,6 +18,12 @@
             "email": "hello@minimailer.app"
         }
     ],
+    "support": {
+        "issues": "https://github.com/minimailer/laravel-minimailer/issues",
+        "source": "https://github.com/minimailer/laravel-minimailer",
+        "security": "https://github.com/minimailer/laravel-minimailer/security/policy",
+        "docs": "https://api.minimailer.app/openapi.yaml"
+    },
     "require": {
         "php": "^8.2",
         "illuminate/mail": "^11.0 || ^12.0 || ^13.0",
@@ -31,14 +38,8 @@
     },
     "repositories": {
         "minimailer-php": {
-            "type": "path",
-            "url": "../minimailer-php",
-            "options": {
-                "symlink": true,
-                "versions": {
-                    "minimailer/minimailer-php": "0.1.0"
-                }
-            }
+            "type": "vcs",
+            "url": "https://github.com/minimailer/minimailer-php"
         }
     },
     "autoload": {
@@ -80,6 +81,6 @@
         "lint": "pint --test",
         "test": "pest"
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }
