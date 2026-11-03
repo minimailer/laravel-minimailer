@@ -6,6 +6,20 @@ All notable changes to `minimailer/laravel-minimailer` will be documented in thi
 
 Nothing yet.
 
+## 0.2.3 - 2026-11-03
+
+### Fixed
+
+- Recipient display name: a mailable addressed with a name (`Mail::to('monika@example.com', 'Monika')`,
+  or `new Address($email, $name)` in the envelope) failed with "The data.attributes.to field must be
+  a valid email address." because the transport sent `"Monika" <monika@example.com>` as `to`. The
+  transport now sends the bare address as `to` and the name as the API's `to_name` attribute, so
+  the name shows in the recipient's client. Requires MiniMailer v1 with `to_name` support; against
+  an older API the name is ignored and the send still succeeds.
+- CC, BCC and reply-to addresses with a display name failed the same way (the inherited Symfony
+  serializer sends `"Name" <address>`). They are now sent as bare addresses; the API has no
+  display-name slot for those lists, so the name is dropped instead of failing the send.
+
 ## 0.2.2 - 2026-10-28
 
 ### Fixed

@@ -66,6 +66,8 @@ Mail::to('customer@example.com')->send(new OrderShipped($order));
 
 The transport supports HTML and plain-text bodies, CC/BCC, reply-to, custom headers, and attachments (including inline `cid:` images). The MiniMailer message id is stamped onto the sent message as the `X-Minimailer-Message-Id` header.
 
+Display names on the sender and the recipient (`Mail::to('monika@example.com', 'Monika')`, `from('hello@acme.com', 'Acme')`) are sent as the API's `from_name` and `to_name` attributes next to the bare addresses, so they show in the recipient's mail client.
+
 ### HTTP behaviour
 
 The transport uses the SDK's default HTTP client, so a send gives up after 10 s connecting and 30 s per request, never follows redirects, and identifies itself with a `minimailer-php/<version>` User-Agent. When a send fails, the transport logs only redacted metadata (recipient and attachment counts, subject length, HTTP status) — never addresses, subject, body, or the API key.
