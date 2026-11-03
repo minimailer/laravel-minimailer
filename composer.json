@@ -74,6 +74,12 @@
             },
             "abandoned": {
                 "audit": "report"
+            },
+            "cooldown": {
+                "period": "7 days",
+                "ignore": {
+                    "minimailer/*": "own vendor namespace (Packagist vendor names are owned)"
+                }
             }
         }
     },
