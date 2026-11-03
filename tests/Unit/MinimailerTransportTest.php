@@ -10,6 +10,7 @@ use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use MiniMailer\Client;
 use MiniMailer\Laravel\MinimailerTransport;
 use MiniMailer\MiniMailer;
+use Symfony\Component\Mailer\Envelope;
 use Symfony\Component\Mailer\Exception\TransportException;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
@@ -60,6 +61,7 @@ it('sends through the v1 outbound-emails contract and stamps the message id', fu
         ->and($payload['data']['attributes']['from'])->toBe('sender@example.com')
         ->and($payload['data']['attributes']['from_name'])->toBe('Acme Studio')
         ->and($payload['data']['attributes']['to'])->toBe('recipient@example.com')
+        ->and($payload['data']['attributes'])->not->toHaveKey('to_name')
         ->and($payload['data']['attributes']['reply_to'])->toBe(['reply@example.com'])
         ->and($payload['data']['attributes']['subject'])->toBe('Welcome')
         ->and($payload['data']['attributes']['html'])->toBe('<p>Hello there</p>')
@@ -161,4 +163,68 @@ it('wraps an SDK API error as a TransportException', function (): void {
         ->html('<p>Invalid</p>');
 
     expect(fn () => $transport->send($email))->toThrow(TransportException::class);
+});
+
+it('sends a named recipient as a bare `to` plus `to_name`', function (): void {
+    $history = [];
+    $transport = transportReplaying([
+        new GuzzleResponse(201, [], (string) json_encode(['data' => ['id' => 'email_01NAMED']])),
+    ], $history);
+
+    $transport->send((new Email)
+        ->from('sender@example.com')
+        ->to(new Address('recipient@example.com', 'Monika'))
+        ->cc(new Address('cc@example.com', 'Copy Me'))
+        ->bcc(new Address('bcc@example.com', 'Blind Copy'))
+        ->replyTo(new Address('reply@example.com', 'Replies'))
+        ->subject('Welcome')
+        ->html('<p>Hello there</p>'));
+
+    $attributes = json_decode((string) $history[0]['request']->getBody(), true)['data']['attributes'];
+
+    // The API has no display-name slot for the lists, so those names are dropped rather than
+    // sent inline (which the API rejects).
+    expect($attributes['to'])->toBe('recipient@example.com')
+        ->and($attributes['to_name'])->toBe('Monika')
+        ->and($attributes['cc'])->toBe(['cc@example.com'])
+        ->and($attributes['bcc'])->toBe(['bcc@example.com'])
+        ->and($attributes['reply_to'])->toBe(['reply@example.com']);
+});
+
+it('keeps the recipient display name when an explicit envelope strips it', function (): void {
+    $history = [];
+    $transport = transportReplaying([
+        new GuzzleResponse(201, [], (string) json_encode(['data' => ['id' => 'email_01ENVELOPE']])),
+    ], $history);
+
+    $email = (new Email)
+        ->from('sender@example.com')
+        ->to(new Address('recipient@example.com', 'Monika'))
+        ->subject('Welcome')
+        ->html('<p>Hello there</p>');
+
+    // Envelope::setRecipients() rebuilds every recipient as a bare Address.
+    $transport->send($email, new Envelope(new Address('sender@example.com'), [new Address('recipient@example.com', 'Monika')]));
+
+    $attributes = json_decode((string) $history[0]['request']->getBody(), true)['data']['attributes'];
+
+    expect($attributes['to'])->toBe('recipient@example.com')
+        ->and($attributes['to_name'])->toBe('Monika');
+});
+
+it('keeps a "0" recipient display name', function (): void {
+    $history = [];
+    $transport = transportReplaying([
+        new GuzzleResponse(201, [], (string) json_encode(['data' => ['id' => 'email_01ZERO']])),
+    ], $history);
+
+    $transport->send((new Email)
+        ->from('sender@example.com')
+        ->to(new Address('recipient@example.com', '0'))
+        ->subject('Welcome')
+        ->html('<p>Hello there</p>'));
+
+    $attributes = json_decode((string) $history[0]['request']->getBody(), true)['data']['attributes'];
+
+    expect($attributes['to_name'])->toBe('0');
 });

@@ -72,15 +72,19 @@ final class MinimailerTransport extends AbstractTransport
         $envelope = $message->getEnvelope();
 
         try {
+            $recipient = $this->getRecipient($email, $envelope);
+
             $payload = [
                 'data' => [
                     'type' => 'outbound-emails',
                     'attributes' => array_filter([
-                        // The address and its display name travel separately: the API validates
-                        // `from` as a bare email and builds the RFC 5322 From header from `from_name`.
+                        // An address and its display name travel separately: the API validates
+                        // `from` and `to` as bare emails and builds the RFC 5322 From/To headers
+                        // from `from_name` / `to_name`. Sending `"Name" <address>` inline is a 422.
                         'from' => ($email->getFrom()[0] ?? $email->getSender() ?? $envelope->getSender())?->getAddress(),
                         'from_name' => $this->getFromName($email, $envelope),
-                        'to' => $this->getRecipient($email, $envelope)?->toString(),
+                        'to' => $recipient?->getAddress(),
+                        'to_name' => $this->getRecipientName($email, $recipient),
                         'cc' => $this->stringifyAddresses($email->getCc()),
                         'bcc' => $this->stringifyAddresses($email->getBcc()),
                         'reply_to' => $this->stringifyAddresses($email->getReplyTo()),
@@ -155,6 +159,20 @@ final class MinimailerTransport extends AbstractTransport
     }
 
     /**
+     * CC, BCC and reply-to travel as bare addresses. The API validates each entry with the
+     * `email` rule and has no display-name slot for these lists, so the inherited
+     * `"Name" <address>` form would turn the whole send into a 422; dropping the name is the
+     * lesser loss.
+     *
+     * @param  Address[]  $addresses
+     * @return list<string>
+     */
+    protected function stringifyAddresses(array $addresses): array
+    {
+        return array_map(static fn (Address $address): string => $address->getAddress(), $addresses);
+    }
+
+    /**
      * @return array<string, string>
      */
     private function getHeaders(Email $email): array
@@ -178,9 +196,41 @@ final class MinimailerTransport extends AbstractTransport
      */
     private function getFromName(Email $email, Envelope $envelope): ?string
     {
-        $name = ($email->getFrom()[0] ?? $email->getSender() ?? $envelope->getSender())?->getName();
+        $from = $email->getFrom()[0] ?? $email->getSender() ?? $envelope->getSender();
 
-        return is_string($name) && $name !== '' ? $name : null;
+        return $from instanceof Address ? $this->displayName($from) : null;
+    }
+
+    /**
+     * The recipient's display name, or null when the address carries none. The envelope decides
+     * WHICH address is the recipient, but an explicitly passed Envelope keeps its recipients bare
+     * (Symfony strips display names in Envelope::setRecipients), so the name is read from the
+     * message's own To header, matched by address; the auto-built DelayedEnvelope already carries
+     * the name, and the recipient itself is the fallback for that case.
+     */
+    private function getRecipientName(Email $email, ?Address $recipient): ?string
+    {
+        if (! $recipient instanceof Address) {
+            return null;
+        }
+
+        foreach ($email->getTo() as $address) {
+            if (strcasecmp($address->getAddress(), $recipient->getAddress()) === 0) {
+                return $this->displayName($address);
+            }
+        }
+
+        return $this->displayName($recipient);
+    }
+
+    /**
+     * A strict empty-string check: a name like "0" is a valid display name and must not be dropped.
+     */
+    private function displayName(Address $address): ?string
+    {
+        $name = $address->getName();
+
+        return $name !== '' ? $name : null;
     }
 
     private function getIdempotencyKey(Email $email): ?string
