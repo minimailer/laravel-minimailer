@@ -105,6 +105,12 @@ it('rejects invalid dates and scalar list and boolean values', function (): void
     expect($this->recorded[1]->suppressed)->toBeNull()->and($this->recorded[1]->affectedRecipients)->toBe([])->and($this->recorded[1]->bouncedAt)->toBeNull();
 });
 
+it('prefers a valid body timestamp over the header', function (): void {
+    // The default header time is 2026-11-10T08:30:00Z, so the body uses a different instant.
+    ($this->controller)(webhookControllerRequest('{"type":"other","data":{},"timestamp":"2026-01-02T03:04:05+00:00"}'));
+    expect($this->recorded[0]->timestamp->format(DATE_ATOM))->toBe('2026-01-02T03:04:05+00:00');
+});
+
 it('falls back to the header for missing or invalid body timestamps', function (mixed $timestamp): void {
     ($this->controller)(webhookControllerRequest(json_encode(['type' => 'other', 'data' => [], 'timestamp' => $timestamp], JSON_THROW_ON_ERROR)));
     expect($this->recorded[0]->timestamp->getTimestamp())->toBe(1794299400);
