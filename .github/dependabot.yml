@@ -14,5 +14,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Same 7-day hold as config.policy.cooldown in composer.json, with the
+    # same exemption for the package's own vendor namespace.
+    cooldown:
+      default-days: 7
+      exclude:
+        - "minimailer/*"
     labels:
       - "dependencies"
