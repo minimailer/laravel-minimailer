@@ -10,6 +10,7 @@ use MiniMailer\Client;
 use MiniMailer\Contracts\ClientContract;
 use MiniMailer\Contracts\MiniMailerContract;
 use MiniMailer\Laravel\Http\Middleware\VerifyMinimailerWebhook;
+use MiniMailer\Laravel\Webhooks\WebhooksServiceProvider;
 use MiniMailer\MiniMailer;
 
 final class MinimailerServiceProvider extends ServiceProvider
@@ -17,6 +18,7 @@ final class MinimailerServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/minimailer.php', 'minimailer');
+        $this->app->register(WebhooksServiceProvider::class);
 
         $this->app->singleton(ClientContract::class, fn (): ClientContract => new Client(
             (string) config('minimailer.key'),

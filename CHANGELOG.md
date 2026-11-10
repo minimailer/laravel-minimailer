@@ -4,6 +4,15 @@ All notable changes to `minimailer/laravel-minimailer` will be documented in thi
 
 ## Unreleased
 
+### Added
+
+- Opt-in webhook events: configure `MINIMAILER_WEBHOOK_PATH` to register a signed POST
+  endpoint that dispatches `WebhookReceived` and nine typed email events. Readonly,
+  serializable event values expose the envelope and leniently parsed email fields.
+  Unknown types remain available through `WebhookReceived`. Deliveries are deduplicated
+  by `webhook-id` for three days, with configurable cache store and TTL. Queued listeners
+  can retry slow or fallible work independently of delivery deduplication.
+
 ### Removed
 
 - Laravel 11 support. Every Laravel 11 release now carries a published security advisory,

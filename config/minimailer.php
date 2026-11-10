@@ -67,4 +67,21 @@ return [
 
     'webhook_tolerance' => (int) env('MINIMAILER_WEBHOOK_TOLERANCE', 300),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Webhook events
+    |--------------------------------------------------------------------------
+    |
+    | Set a non-empty path to register the signed webhook endpoint. Deliveries
+    | are deduplicated for three days. Use a shared cache store across servers.
+    |
+    */
+
+    'webhooks' => [
+        'path' => env('MINIMAILER_WEBHOOK_PATH'),
+        'middleware' => ['api'],
+        'dedupe_ttl' => (int) env('MINIMAILER_WEBHOOK_DEDUPE_TTL', 259200),
+        'cache_store' => env('MINIMAILER_WEBHOOK_CACHE_STORE'),
+    ],
+
 ];
