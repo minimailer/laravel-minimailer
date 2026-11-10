@@ -60,14 +60,7 @@ final class WebhookController
             return $this->cache->has($key) ? new Response('', 200) : new Response('', 503);
         }
 
-        $timestamp = Payload::date($body['timestamp'] ?? null);
-        $headerTime = $request->headers->get('webhook-timestamp');
-
-        if ($timestamp === null && is_string($headerTime) && preg_match('/^\d{1,12}$/', $headerTime) === 1) {
-            $timestamp = (new DateTimeImmutable)->setTimestamp((int) $headerTime);
-        }
-
-        $envelope = new WebhookReceived($id, $body['type'], $timestamp ?? new DateTimeImmutable, $body['data']);
+        $envelope = new WebhookReceived($id, $body['type'], $this->timestamp($body, $request), $body['data']);
         $this->events->dispatch($envelope);
 
         $eventClass = self::EVENT_TYPES[$envelope->type] ?? null;
@@ -77,5 +70,27 @@ final class WebhookController
         }
 
         return new Response('', 204);
+    }
+
+    /**
+     * The envelope timestamp, then the signed webhook-timestamp header, then now.
+     *
+     * @param  array<array-key, mixed>  $body
+     */
+    private function timestamp(array $body, Request $request): DateTimeImmutable
+    {
+        $timestamp = Payload::date($body['timestamp'] ?? null);
+
+        if ($timestamp !== null) {
+            return $timestamp;
+        }
+
+        $header = $request->headers->get('webhook-timestamp');
+
+        if (is_string($header) && preg_match('/^\d{1,12}$/', $header) === 1) {
+            return (new DateTimeImmutable)->setTimestamp((int) $header);
+        }
+
+        return new DateTimeImmutable;
     }
 }

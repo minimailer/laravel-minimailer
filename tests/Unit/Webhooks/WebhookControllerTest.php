@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Cache\ArrayStore;
 use Illuminate\Cache\Repository;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Http\Request;
 use MiniMailer\Laravel\Webhooks\Events\WebhookReceived;
@@ -57,7 +58,7 @@ it('accepts unknown types as generic events', function (string $type): void {
 })->with(['campaign.sent', 'inbound_email.received', 'domain.verified', 'future.event']);
 
 it('rejects malformed deliveries before deduplicating', function (string $body, ?string $id): void {
-    $cache = Mockery::mock(Illuminate\Contracts\Cache\Repository::class);
+    $cache = Mockery::mock(CacheRepository::class);
     $cache->shouldNotReceive('add');
     expect((new WebhookController($cache, $this->events))(webhookControllerRequest($body, $id))->getStatusCode())->toBe(400)
         ->and($this->recorded)->toBe([]);
@@ -116,7 +117,7 @@ it('uses now when both timestamp sources fail', function (?string $header): void
 })->with([null, '', 'bad', '999999999999999999999999']);
 
 it('fails instead of acknowledging when the cache write fails', function (): void {
-    $cache = Mockery::mock(Illuminate\Contracts\Cache\Repository::class);
+    $cache = Mockery::mock(CacheRepository::class);
     $cache->shouldReceive('add')->once()->andReturn(false);
     $cache->shouldReceive('has')->once()->with('minimailer:webhook:delivery_1')->andReturn(false);
     expect((new WebhookController($cache, $this->events))(webhookControllerRequest('{"type":"email.bounced","data":{}}'))->getStatusCode())->toBe(503)
@@ -124,7 +125,7 @@ it('fails instead of acknowledging when the cache write fails', function (): voi
 });
 
 it('uses the supplied dedupe TTL', function (): void {
-    $cache = Mockery::mock(Illuminate\Contracts\Cache\Repository::class);
+    $cache = Mockery::mock(CacheRepository::class);
     $cache->shouldReceive('add')->once()->with('minimailer:webhook:delivery_1', true, 123)->andReturn(true);
     expect((new WebhookController($cache, $this->events, 123))(webhookControllerRequest('{"type":"other","data":{}}'))->getStatusCode())->toBe(204);
 });

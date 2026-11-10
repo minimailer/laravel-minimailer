@@ -34,11 +34,17 @@ final class Payload
 
         try {
             $date = new DateTimeImmutable($value);
-            $errors = DateTimeImmutable::getLastErrors();
-
-            return $errors === false || ($errors['warning_count'] === 0 && $errors['error_count'] === 0) ? $date : null;
         } catch (Exception|ValueError) {
             return null;
         }
+
+        // Overflowing dates such as February 30 parse with a warning instead of throwing.
+        $errors = DateTimeImmutable::getLastErrors();
+
+        if ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0)) {
+            return null;
+        }
+
+        return $date;
     }
 }

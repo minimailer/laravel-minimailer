@@ -11,16 +11,18 @@ use MiniMailer\Laravel\Http\Middleware\VerifyMinimailerWebhook;
 
 final class WebhooksServiceProvider extends ServiceProvider
 {
+    private const DEFAULT_DEDUPE_TTL = 259200; // three days
+
     public function register(): void
     {
         $this->app->bind(WebhookController::class, function (): WebhookController {
-            $ttl = config('minimailer.webhooks.dedupe_ttl', 259200);
+            $ttl = config('minimailer.webhooks.dedupe_ttl', self::DEFAULT_DEDUPE_TTL);
             $store = config('minimailer.webhooks.cache_store');
 
             return new WebhookController(
                 $this->app->make('cache')->store(is_string($store) ? $store : null),
                 $this->app->make(Dispatcher::class),
-                is_int($ttl) && $ttl > 0 ? $ttl : 259200,
+                is_int($ttl) && $ttl > 0 ? $ttl : self::DEFAULT_DEDUPE_TTL,
             );
         });
     }
@@ -33,12 +35,24 @@ final class WebhooksServiceProvider extends ServiceProvider
             return;
         }
 
-        $middleware = config('minimailer.webhooks.middleware', ['api']);
-        $middleware = is_string($middleware) ? [$middleware] : $middleware;
-        $middleware = is_array($middleware) ? array_values(array_filter($middleware, is_string(...))) : ['api'];
-
         Route::post(trim($path), WebhookController::class)
-            ->middleware([...$middleware, VerifyMinimailerWebhook::class])
+            ->middleware([...$this->middleware(), VerifyMinimailerWebhook::class])
             ->name('minimailer.webhook');
+    }
+
+    /** @return list<string> */
+    private function middleware(): array
+    {
+        $middleware = config('minimailer.webhooks.middleware', ['api']);
+
+        if (is_string($middleware)) {
+            return [$middleware];
+        }
+
+        if (! is_array($middleware)) {
+            return ['api'];
+        }
+
+        return array_values(array_filter($middleware, is_string(...)));
     }
 }
