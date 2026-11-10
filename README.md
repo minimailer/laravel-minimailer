@@ -11,7 +11,7 @@ A first-class Laravel mail transport for [MiniMailer](https://minimailer.app). S
 ## Requirements
 
 - PHP 8.2+
-- Laravel 11, 12, or 13
+- Laravel 12 or 13
 
 ## Installation
 

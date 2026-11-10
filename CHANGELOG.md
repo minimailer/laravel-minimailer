@@ -4,7 +4,11 @@ All notable changes to `minimailer/laravel-minimailer` will be documented in thi
 
 ## Unreleased
 
-Nothing yet.
+### Removed
+
+- Laravel 11 support. Every Laravel 11 release now carries a published security advisory,
+  so Composer's default advisory blocking refuses to install it and it can no longer be
+  tested. The package requires Laravel 12 or 13; apps on Laravel 11 stay on 0.2.x.
 
 ## 0.2.3 - 2026-11-03
 

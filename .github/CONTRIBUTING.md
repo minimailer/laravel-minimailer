@@ -33,8 +33,8 @@ composer test    # pest (Orchestra Testbench)
 If `composer lint` fails, fix it with `vendor/bin/pint` and commit the result. CI never
 formats your branch for you.
 
-This package supports **PHP 8.2+** and **Laravel 11 to 13**, so avoid syntax newer than
-8.2 and framework APIs newer than 11 — the test matrix covers PHP 8.2 to 8.5 on Linux,
+This package supports **PHP 8.2+** and **Laravel 12 to 13**, so avoid syntax newer than
+8.2 and framework APIs newer than 12 — the test matrix covers PHP 8.2 to 8.5 on Linux,
 Windows and macOS, against both `prefer-lowest` and `prefer-stable` dependency
 resolutions. If you change a dependency constraint, run:
 
