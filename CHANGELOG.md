@@ -4,6 +4,10 @@ All notable changes to `minimailer/laravel-minimailer` will be documented in thi
 
 ## Unreleased
 
+Nothing yet.
+
+## 0.3.0 - 2026-11-11
+
 ### Added
 
 - Opt-in webhook events: configure `MINIMAILER_WEBHOOK_PATH` to register a signed POST
