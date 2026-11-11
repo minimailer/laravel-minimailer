@@ -149,7 +149,7 @@ Event::listen(EmailBounced::class, function (EmailBounced $event): void {
 });
 ```
 
-MiniMailer already suppresses the address on the sending domain: permanently after a hard bounce or a complaint, and for a limited time after a soft bounce. A `MessageTooLarge` bounce is about the message, not the mailbox, so it does not suppress the address: `suppressed` is `false`, and you can retry with a smaller message. The listener checks `bounceType` rather than `suppressed`, so it updates the app's own records only on a hard bounce.
+MiniMailer already suppresses the address on the sending domain: permanently after a hard bounce or a complaint, and for a limited time after most soft bounces. A soft bounce about the message, not the mailbox (`MessageTooLarge`, `ContentRejected` or `AttachmentRejected`), does not suppress the address: `suppressed` is `false`, and you can fix the message and send again. The listener checks `bounceType` rather than `suppressed`, so it updates the app's own records only on a hard bounce.
 
 Deliveries are deduplicated on `webhook-id` for 3 days in the cache. The cache store must persist between requests (`redis`, `database`, `file`, `memcached`; not `array`), and apps running on multiple servers need a store they all share. Set `MINIMAILER_WEBHOOK_DEDUPE_TTL` (seconds) and `MINIMAILER_WEBHOOK_CACHE_STORE` to customize this. Successful deliveries return `204`, duplicates return `200`, malformed envelopes return `400`, and a delivery the cache could not record returns `503` so MiniMailer retries it. Invalid envelope timestamps fall back to the signed header time, then the current time.
 
