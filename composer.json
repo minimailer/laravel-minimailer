@@ -83,8 +83,7 @@
             "cooldown": {
                 "period": "7 days",
                 "ignore": {
-                    "minimailer/*": "own vendor namespace (Packagist vendor names are owned)",
-                    "symfony/mime": "advisory-fixed v7.4.22 / v8.1.10 released inside the cooldown on 2026-11-03 — remove this line after 2026-11-11"
+                    "minimailer/*": "own vendor namespace (Packagist vendor names are owned)"
                 }
             }
         }
